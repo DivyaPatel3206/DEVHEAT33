@@ -1,0 +1,834 @@
+India’s frontier, which is roughly one-third coastline, abuts six countries. It is bounded to the northwest …
+The land of India—together with Bangladesh and most of Pakistan—forms a well-defined subcontinent, set off from the rest of Asia by the imposing northern mountain rampart of the Himalayas and by adjoining mountain ranges to the west and east.<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>FORGE_OS // GROUP_MODE</title>
+
+  <style>
+    :root{
+      --cyan:#00f0ff;
+      --magenta:#ff00ff;
+      --bg:#000205;
+      --glass:rgba(0,240,255,.06);
+      --glass2:rgba(255,255,255,.04);
+      --border:rgba(0,240,255,.18);
+      --text:rgba(255,255,255,.86);
+      --muted:rgba(255,255,255,.55);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+      color:var(--text);
+      overflow:hidden;
+    }
+
+    /* Background canvas */
+    #neuralCanvas{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+    }
+
+    .scene{
+      position:relative;
+      z-index:2;
+      height:100%;
+      width:100%;
+      transform-style:preserve-3d;
+    }
+
+    .glass{
+      background:var(--glass);
+      border:1px solid var(--border);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 70px rgba(0,0,0,.55), 0 0 22px rgba(0,240,255,.08);
+      border-radius:18px;
+    }
+    .glass-soft{
+      background:var(--glass2);
+      border:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(16px);
+      border-radius:16px;
+    }
+
+    /* Topbar */
+    .topbar{
+      position:fixed;
+      top:18px;
+      left:18px;
+      right:18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 16px;
+      gap:14px;
+      z-index:5;
+    }
+    .brand{display:flex;gap:12px;align-items:center;}
+    .brand-mark{
+      width:38px;height:38px;border-radius:12px;
+      display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.35);
+      color:var(--magenta);
+      text-shadow:0 0 14px rgba(255,0,255,.35);
+      font-weight:900;
+    }
+    .brand-title{letter-spacing:3px;font-weight:900;}
+    .brand-sub{
+      margin-top:2px;font-size:11px;
+      letter-spacing:2px;color:var(--muted);
+    }
+    .topbar-right{display:flex;gap:10px;align-items:center;}
+
+    .status-pill{
+      display:flex;gap:10px;align-items:center;
+      padding:10px 12px;border-radius:999px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.10);
+      font-size:12px;color:rgba(255,255,255,.7);
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background:var(--magenta);
+      box-shadow:0 0 18px rgba(255,0,255,.55);
+    }
+
+    .primary-btn,.ghost-btn{
+      height:40px;padding:0 14px;border-radius:12px;
+      cursor:pointer;letter-spacing:2px;text-transform:uppercase;
+      font-weight:900;font-size:11px;transition:.25s;
+    }
+    .primary-btn{
+      border:1px solid rgba(255,0,255,.35);
+      background:rgba(255,0,255,.16);
+      color:white;
+      box-shadow:0 0 18px rgba(255,0,255,.15);
+    }
+    .primary-btn:hover{transform:translateY(-1px);box-shadow:0 0 26px rgba(255,0,255,.25);}
+    .ghost-btn{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.25);
+      color:rgba(255,255,255,.75);
+    }
+    .ghost-btn:hover{border-color:rgba(0,240,255,.35);color:white;}
+
+    /* Layout */
+    .layout{
+      height:100%;
+      padding:92px 18px 120px;
+      display:grid;
+      grid-template-columns: 1.1fr 1.2fr 0.9fr;
+      gap:14px;
+    }
+
+    .panel{padding:16px;transform:translateZ(20px);}
+    .panel-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;}
+    .panel-title{font-weight:900;letter-spacing:2px;text-transform:uppercase;}
+    .panel-id{font-size:10px;letter-spacing:3px;color:rgba(255,255,255,.5);}
+
+    .divider{height:1px;background:rgba(255,255,255,.08);margin:14px 0;}
+
+    /* Room list */
+    .room{
+      padding:14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .room-left{display:flex;flex-direction:column;gap:6px;}
+    .room-title{font-weight:1000;letter-spacing:2px;text-transform:uppercase;font-size:12px;}
+    .room-sub{color:rgba(255,255,255,.62);font-size:12px;}
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(0,240,255,.18);
+      background:rgba(0,240,255,.06);
+      font-size:10px;letter-spacing:1px;color:rgba(255,255,255,.78);
+      width:max-content;
+    }
+    .pill .p-dot{
+      width:6px;height:6px;border-radius:50%;
+      background:var(--cyan);
+      box-shadow:0 0 10px rgba(0,240,255,.4);
+    }
+
+    /* Meet Panel */
+    .meet-box{
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .meet-title{
+      font-weight:1000;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      font-size:13px;
+    }
+    .meet-sub{color:rgba(255,255,255,.62);font-size:12px;line-height:1.6;}
+    .meet-row{display:flex;gap:10px;flex-wrap:wrap;}
+    .meet-input{
+      flex:1;
+      min-width:220px;
+      height:40px;
+      padding:0 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.35);
+      color:white;
+      outline:none;
+      letter-spacing:1px;
+    }
+    .meet-hint{
+      font-size:11px;
+      color:rgba(255,255,255,.5);
+      letter-spacing:1px;
+    }
+    .meet-actions{
+      display:flex;gap:10px;flex-wrap:wrap;
+    }
+    .warn{
+      color:rgba(255,255,255,.65);
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      padding:10px 12px;border-radius:12px;
+      font-size:12px;line-height:1.6;
+    }
+    .warn b{color:var(--cyan);}
+
+    /* Leaderboard */
+    .leader-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:10px;
+    }
+    .lb-title{font-weight:1000;letter-spacing:2px;text-transform:uppercase;font-size:12px;}
+    .lb-filter{
+      height:34px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.35);
+      color:rgba(255,255,255,.78);
+      padding:0 10px;
+      outline:none;
+      font-size:11px;
+      letter-spacing:1px;
+    }
+
+    .lb-row{
+      display:grid;
+      grid-template-columns: 34px 1fr 110px;
+      gap:10px;
+      align-items:center;
+      padding:10px 10px;
+      border-radius:14px;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.06);
+      margin-top:8px;
+    }
+    .rank{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      font-weight:1000;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.85);
+    }
+    .who{display:flex;flex-direction:column;gap:4px;}
+    .name{
+      font-weight:1000;
+      letter-spacing:1px;
+    }
+    .meta{
+      font-size:11px;
+      color:rgba(255,255,255,.55);
+      letter-spacing:1px;
+    }
+    .scorebox{
+      text-align:right;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      align-items:flex-end;
+    }
+    .score{
+      font-weight:1000;
+      color:var(--cyan);
+      text-shadow:0 0 18px rgba(0,240,255,.18);
+      letter-spacing:1px;
+    }
+    .delta{
+      font-size:11px;
+      color:rgba(255,255,255,.55);
+      letter-spacing:1px;
+    }
+
+    /* Score actions */
+    .score-actions{
+      display:flex;gap:10px;flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    /* Bottom HUD nav */
+    .command-console{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%) translateZ(40px);
+      bottom:26px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 22px;
+      background:var(--glass);
+      backdrop-filter:blur(20px);
+      border-radius:50px;
+      border:1px solid var(--border);
+      box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 20px rgba(0,240,255,.1);
+      z-index:1000;
+    }
+    .nav-item{
+      position:relative;
+      text-decoration:none;
+      color:rgba(255,255,255,.55);
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      padding:12px 18px;
+      border-radius:30px;
+      transition:.35s cubic-bezier(.175,.885,.32,1.275);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .nav-item i{font-style:normal;font-size:14px;}
+    .nav-item:hover{
+      color:var(--cyan);
+      background:rgba(0,240,255,.10);
+      text-shadow:0 0 10px var(--cyan);
+    }
+    .nav-item.active{
+      color:white;
+      background:rgba(255,0,255,.14);
+      border:1px solid rgba(255,0,255,.28);
+      box-shadow:0 0 15px rgba(255,0,255,.18);
+    }
+    .nav-item.active::after{
+      content:"";
+      position:absolute;
+      bottom:-12px;left:50%;
+      transform:translateX(-50%);
+      width:40%;
+      height:2px;
+      background:var(--magenta);
+      box-shadow:0 0 15px var(--magenta);
+      border-radius:10px;
+    }
+
+    .console-glint{
+      position:absolute;top:0;left:-100%;
+      width:60px;height:100%;
+      background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+      animation:glint 5s infinite linear;
+      pointer-events:none;
+    }
+    @keyframes glint{
+      0%{left:-120%}
+      18%{left:220%}
+      100%{left:220%}
+    }
+    .console-id{
+      position:absolute;
+      top:-18px;left:28px;
+      font-size:8px;color:var(--cyan);
+      opacity:.7;letter-spacing:3px;
+    }
+
+    @media (max-width: 1100px){
+      .layout{grid-template-columns:1fr}
+      .command-console{width:calc(100% - 24px);justify-content:space-between}
+      .nav-item{padding:10px 12px}
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="neuralCanvas" aria-hidden="true"></canvas>
+
+  <div class="scene" id="scene">
+    <header class="topbar glass">
+      <div class="brand">
+        <div class="brand-mark">👥</div>
+        <div class="brand-text">
+          <div class="brand-title">GROUP MODE</div>
+          <div class="brand-sub">LEADERBOARD • LIVE ROOM • SCORING</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="status-pill">
+          <span class="dot"></span>
+          <span id="roomStatus">Room: Offline</span>
+        </div>
+        <button class="ghost-btn" id="createRoomBtn">CREATE ROOM</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: Rooms -->
+      <section class="panel glass">
+        <div class="panel-head">
+          <div class="panel-title">Rooms</div>
+          <div class="panel-id">PODS // PUBLIC</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="room glass-soft">
+          <div class="room-left">
+            <div class="room-title">IIIT Study Pod</div>
+            <div class="room-sub">OS + CN • Shared notes + quick quizzes</div>
+            <div class="pill"><span class="p-dot"></span> 4 online • 2 in call</div>
+          </div>
+          <button class="primary-btn" data-room="IIIT Study Pod">JOIN</button>
+        </div>
+
+        <div class="room glass-soft">
+          <div class="room-left">
+            <div class="room-title">Quiz Duel Arena</div>
+            <div class="room-sub">1v1 battles • fastest answers</div>
+            <div class="pill"><span class="p-dot"></span> 2 online • 0 in call</div>
+          </div>
+          <button class="primary-btn" data-room="Quiz Duel Arena">JOIN</button>
+        </div>
+
+        <div class="room glass-soft">
+          <div class="room-left">
+            <div class="room-title">Graph Builders</div>
+            <div class="room-sub">Concept maps • peer explanations</div>
+            <div class="pill"><span class="p-dot"></span> 6 online • 3 in call</div>
+          </div>
+          <button class="primary-btn" data-room="Graph Builders">JOIN</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="warn">
+          <b>Scoring logic (demo):</b> Each minute in room + quiz wins + streak bonuses add points.
+          In real app, points should come from backend (Firebase/Node).
+        </div>
+      </section>
+
+      <!-- CENTER: Meet Integration Panel -->
+      <section class="panel glass">
+        <div class="panel-head">
+          <div class="panel-title">Live Meet</div>
+          <div class="panel-id">GOOGLE MEET // INTEGRATION</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="meet-box glass-soft">
+          <div class="meet-title">Meet Link Control</div>
+          <div class="meet-sub">
+            This UI supports <b>paste/join</b> and <b>generate invite</b> (placeholder).
+            <br/>
+            ⚠️ Real Google Meet creation needs Google APIs (OAuth) + Google Calendar/Meet.
+          </div>
+
+          <div class="meet-row">
+            <input id="meetLink" class="meet-input" placeholder="Paste Google Meet link here…" />
+            <button class="primary-btn" id="joinMeetBtn">JOIN MEET</button>
+          </div>
+
+          <div class="meet-actions">
+            <button class="ghost-btn" id="generateMeetBtn">GENERATE MEET (DEMO)</button>
+            <button class="ghost-btn" id="copyMeetBtn">COPY LINK</button>
+          </div>
+
+          <div class="meet-hint" id="meetHint">
+            Tip: later you will generate Meet by creating a Calendar event using Google Calendar API.
+          </div>
+
+          <div class="warn">
+            <b>Real integration roadmap:</b><br/>
+            1) Google OAuth (sign-in) → 2) Calendar API create event → 3) Event contains Hangouts/Meet link → 4) Share link to room.
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="meet-box glass-soft">
+          <div class="meet-title">Room Scoring Controls (Demo)</div>
+          <div class="meet-sub">Use these to simulate points while building backend.</div>
+
+          <div class="score-actions">
+            <button class="primary-btn" id="addMinuteBtn">+1 Minute Study</button>
+            <button class="primary-btn" id="quizWinBtn">+ Quiz Win</button>
+            <button class="ghost-btn" id="resetScoresBtn">Reset Scores</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Leaderboard -->
+      <section class="panel glass">
+        <div class="panel-head">
+          <div class="panel-title">Leaderboard</div>
+          <div class="panel-id">RANK // REALTIME</div>
+        </div>
+
+        <div class="leader-head">
+          <div class="lb-title">Friends</div>
+          <select class="lb-filter" id="lbMode">
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="leaderboard"></div>
+
+        <div class="divider"></div>
+
+        <div class="warn">
+          <b>Realtime leaderboard:</b> For real realtime, store scores in backend
+          (Firebase Realtime DB / Firestore) and listen to updates.
+        </div>
+      </section>
+    </main>
+
+    <nav class="command-console" id="console">
+      <div class="console-id">COMMAND_CONSOLE_V3.1</div>
+      <div class="console-glint"></div>
+
+      <a href="dashboard.html" class="nav-item"><i>⌂</i> Dashboard</a>
+      <a href="upload.html" class="nav-item"><i>⤒</i> Upload</a>
+      <a href="quiz.html" class="nav-item"><i>?</i> Quiz</a>
+      <a href="graph.html" class="nav-item"><i>⑂</i> Graph</a>
+      <a href="calendar.html" class="nav-item"><i>📅</i> Calendar</a>
+      <a href="group.html" class="nav-item active"><i>👥</i> Group</a>
+    </nav>
+  </div>
+
+  <script>
+    (() => {
+      // =========================
+      // Helpers
+      // =========================
+      const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+      const qs = (s)=>document.querySelector(s);
+      const qsa = (s)=>Array.from(document.querySelectorAll(s));
+
+      function safeJSONParse(str, fallback){
+        try{ return JSON.parse(str); }catch{ return fallback; }
+      }
+
+      // =========================
+      // Dynamic Leaderboard (localStorage demo)
+      // =========================
+      const LB_KEY = "forge_group_leaderboard_v1";
+
+      // seed demo friends
+      const seed = [
+        { id:"you", name:"You", meta:"Host • IIIT Study Pod", today: 120, week: 540, all: 2200 },
+        { id:"a", name:"Aarav", meta:"OS Runner", today: 95,  week: 460, all: 1800 },
+        { id:"b", name:"Meera", meta:"CN Specialist", today: 110, week: 510, all: 2050 },
+        { id:"c", name:"Rohan", meta:"Quiz Duelist", today: 70,  week: 340, all: 1500 },
+        { id:"d", name:"Isha", meta:"Graph Mapper", today: 85,  week: 420, all: 1700 },
+      ];
+
+      function loadLB(){
+        const raw = localStorage.getItem(LB_KEY);
+        if(!raw){
+          localStorage.setItem(LB_KEY, JSON.stringify(seed));
+          return structuredClone(seed);
+        }
+        const data = safeJSONParse(raw, seed);
+        if(!Array.isArray(data) || data.length === 0) return structuredClone(seed);
+        return data;
+      }
+
+      function saveLB(data){
+        localStorage.setItem(LB_KEY, JSON.stringify(data));
+      }
+
+      let lb = loadLB();
+
+      const leaderboardEl = qs("#leaderboard");
+      const lbModeEl = qs("#lbMode");
+
+      function renderLB(){
+        const mode = lbModeEl.value; // today/week/all
+        const sorted = [...lb].sort((x,y)=> (y[mode]||0) - (x[mode]||0));
+
+        leaderboardEl.innerHTML = sorted.map((p, idx) => {
+          const score = p[mode] || 0;
+          const delta = mode === "today" ? "+ live" : (mode === "week" ? "rolling" : "lifetime");
+          const rankColor = idx === 0 ? "style='border-color: rgba(0,240,255,.28);'" : "";
+          return `
+            <div class="lb-row">
+              <div class="rank" ${rankColor}>${idx+1}</div>
+              <div class="who">
+                <div class="name">${p.name}</div>
+                <div class="meta">${p.meta}</div>
+              </div>
+              <div class="scorebox">
+                <div class="score">${score} pts</div>
+                <div class="delta">${delta}</div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      lbModeEl.addEventListener("change", renderLB);
+      renderLB();
+
+      // simulate tiny realtime drift for others
+      setInterval(() => {
+        // random friend (not you)
+        const i = Math.floor(1 + Math.random() * (lb.length - 1));
+        const bump = Math.random() < 0.6 ? 1 : 2;
+        lb[i].today += bump;
+        lb[i].week += bump;
+        lb[i].all += bump;
+        saveLB(lb);
+        renderLB();
+      }, 8000);
+
+      // =========================
+      // Scoring Controls (Demo)
+      // =========================
+      const addMinuteBtn = qs("#addMinuteBtn");
+      const quizWinBtn = qs("#quizWinBtn");
+      const resetScoresBtn = qs("#resetScoresBtn");
+
+      function addPoints(points){
+        const you = lb.find(x => x.id === "you");
+        if(!you) return;
+        you.today += points;
+        you.week += points;
+        you.all += points;
+        saveLB(lb);
+        renderLB();
+      }
+
+      addMinuteBtn.addEventListener("click", () => addPoints(2)); // 2 pts per minute
+      quizWinBtn.addEventListener("click", () => addPoints(15));  // 15 pts per win
+
+      resetScoresBtn.addEventListener("click", () => {
+        lb = structuredClone(seed);
+        saveLB(lb);
+        renderLB();
+      });
+
+      // =========================
+      // Room join + status
+      // =========================
+      const roomStatus = qs("#roomStatus");
+      qsa("[data-room]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const room = btn.getAttribute("data-room");
+          roomStatus.textContent = `Room: ${room}`;
+          addPoints(5); // join bonus (demo)
+        });
+      });
+
+      // =========================
+      // Google Meet Integration (UI + placeholders)
+      // =========================
+      const meetLinkEl = qs("#meetLink");
+      const joinMeetBtn = qs("#joinMeetBtn");
+      const generateMeetBtn = qs("#generateMeetBtn");
+      const copyMeetBtn = qs("#copyMeetBtn");
+      const meetHint = qs("#meetHint");
+
+      function isLikelyMeetLink(url){
+        if(!url) return false;
+        return /meet\.google\.com\/[a-z\-]{3,}/i.test(url.trim());
+      }
+
+      joinMeetBtn.addEventListener("click", () => {
+        const link = meetLinkEl.value.trim();
+        if(!isLikelyMeetLink(link)){
+          meetHint.textContent = "⚠️ Paste a valid Google Meet link like: https://meet.google.com/abc-defg-hij";
+          return;
+        }
+        meetHint.textContent = "Launching Meet in new tab…";
+        window.open(link, "_blank", "noopener,noreferrer");
+        addPoints(10); // joining call bonus (demo)
+      });
+
+      generateMeetBtn.addEventListener("click", () => {
+        // DEMO link generator (NOT real Meet API)
+        const letters = "abcdefghijklmnopqrstuvwxyz";
+        const chunk = () => Array.from({length:3},()=>letters[Math.floor(Math.random()*letters.length)]).join("");
+        const demoLink = `https://meet.google.com/${chunk()}-${chunk()}${chunk()}-${chunk()}${chunk()}${chunk()}`.replace(/([a-z]{3})([a-z]{6})([a-z]{9})/,"$1-$2-$3");
+        meetLinkEl.value = demoLink;
+        meetHint.textContent = "Demo Meet link generated (placeholder). Real generation requires Google OAuth + Calendar API.";
+      });
+
+      copyMeetBtn.addEventListener("click", async () => {
+        const link = meetLinkEl.value.trim();
+        if(!link){
+          meetHint.textContent = "Nothing to copy. Generate or paste a Meet link first.";
+          return;
+        }
+        try{
+          await navigator.clipboard.writeText(link);
+          meetHint.textContent = "Copied Meet link to clipboard.";
+        }catch{
+          meetHint.textContent = "Clipboard blocked. Copy manually.";
+        }
+      });
+
+      // Create room button (UI)
+      qs("#createRoomBtn").addEventListener("click", () => {
+        roomStatus.textContent = "Room: Private Pod (Created)";
+        addPoints(8);
+      });
+
+      // =========================
+      // 3D Parallax
+      // =========================
+      const scene = qs("#scene");
+      const consoleBar = qs("#console");
+      let mx=0,my=0,tx=0,ty=0;
+
+      window.addEventListener("mousemove",(e)=>{
+        const w=innerWidth,h=innerHeight;
+        mx=(e.clientX/w - .5)*2;
+        my=(e.clientY/h - .5)*2;
+      });
+
+      function parallaxLoop(){
+        tx += (mx - tx)*0.06;
+        ty += (my - ty)*0.06;
+
+        const rotY = clamp(tx*8,-10,10);
+        const rotX = clamp(-ty*6,-8,8);
+
+        if(scene) scene.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        if(consoleBar) consoleBar.style.transform =
+          `translateX(-50%) translateZ(40px) rotateX(${rotX*0.25}deg) rotateY(${rotY*0.35}deg)`;
+
+        requestAnimationFrame(parallaxLoop);
+      }
+      parallaxLoop();
+
+      // =========================
+      // Neural Background + Particles
+      // =========================
+      const canvas = qs("#neuralCanvas");
+      const ctx = canvas.getContext("2d");
+      let W=0,H=0,DPR=1;
+      const nodes=[], particles=[];
+      const rand=(a,b)=>a+Math.random()*(b-a);
+
+      function resize(){
+        DPR = Math.max(1, Math.min(2, devicePixelRatio || 1));
+        W = Math.floor(innerWidth);
+        H = Math.floor(innerHeight);
+        canvas.width = Math.floor(W*DPR);
+        canvas.height = Math.floor(H*DPR);
+        canvas.style.width = W+"px";
+        canvas.style.height = H+"px";
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+      }
+      window.addEventListener("resize", () => { resize(); init(); });
+      resize();
+
+      function init(){
+        nodes.length=0; particles.length=0;
+        const nCount = clamp(Math.round((innerWidth*innerHeight)/24000), 35, 110);
+        const pCount = clamp(Math.round((innerWidth*innerHeight)/18000), 45, 160);
+
+        for(let i=0;i<nCount;i++){
+          nodes.push({x:rand(0,W),y:rand(0,H),vx:rand(-.25,.25),vy:rand(-.25,.25),r:rand(1.2,2.2)});
+        }
+        for(let i=0;i<pCount;i++){
+          particles.push({x:rand(0,W),y:rand(0,H),vx:rand(-.18,.18),vy:rand(-.18,.18),r:rand(.6,1.8),a:rand(.08,.24)});
+        }
+      }
+      init();
+
+      function drawGlows(){
+        const g1 = ctx.createRadialGradient(W*.2,H*.3,0,W*.2,H*.3,Math.max(W,H)*.45);
+        g1.addColorStop(0,"rgba(0,240,255,0.12)");
+        g1.addColorStop(1,"rgba(0,240,255,0)");
+        const g2 = ctx.createRadialGradient(W*.8,H*.7,0,W*.8,H*.7,Math.max(W,H)*.45);
+        g2.addColorStop(0,"rgba(255,0,255,0.10)");
+        g2.addColorStop(1,"rgba(255,0,255,0)");
+        ctx.fillStyle=g1; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+      }
+
+      function step(){
+        ctx.clearRect(0,0,W,H);
+        ctx.fillStyle="rgba(0,2,5,0.9)";
+        ctx.fillRect(0,0,W,H);
+        drawGlows();
+
+        for(const p of particles){
+          p.x+=p.vx; p.y+=p.vy;
+          if(p.x<-10)p.x=W+10; if(p.x>W+10)p.x=-10;
+          if(p.y<-10)p.y=H+10; if(p.y>H+10)p.y=-10;
+          ctx.beginPath();
+          ctx.fillStyle=`rgba(255,255,255,${p.a})`;
+          ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+          ctx.fill();
+        }
+
+        for(const n of nodes){
+          n.x+=n.vx; n.y+=n.vy;
+          if(n.x<0||n.x>W)n.vx*=-1;
+          if(n.y<0||n.y>H)n.vy*=-1;
+        }
+
+        const linkDist = clamp(Math.min(W,H)*0.15,90,160);
+        for(let i=0;i<nodes.length;i++){
+          const a=nodes[i];
+          ctx.beginPath();
+          ctx.fillStyle="rgba(255,0,255,0.30)";
+          ctx.arc(a.x,a.y,a.r,0,Math.PI*2);
+          ctx.fill();
+
+          for(let j=i+1;j<nodes.length;j++){
+            const b=nodes[j];
+            const d=Math.hypot(a.x-b.x,a.y-b.y);
+            if(d<linkDist){
+              const alpha=(1-d/linkDist)*0.28;
+              const isCyan=((i+j)%6===0);
+              ctx.strokeStyle = isCyan ? `rgba(0,240,255,${alpha})` : `rgba(255,0,255,${alpha})`;
+              ctx.lineWidth=1;
+              ctx.beginPath();
+              ctx.moveTo(a.x,a.y);
+              ctx.lineTo(b.x,b.y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        requestAnimationFrame(step);
+      }
+      step();
+
+    })();
+  </script>
+</body>
+</html>
